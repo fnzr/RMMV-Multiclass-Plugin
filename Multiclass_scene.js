@@ -109,43 +109,15 @@
     };
 
     Window_ClassList.prototype.refresh = function() {
-        this.makeItemList();
-        this.createContents();
-        this.drawAllItems();
+        //this.makeItemList();
+        //this.createContents();
+        //this.drawAllItems();
+        this.drawText("Why hello",0,0,this.width,'left');
     };
 
-    Window_ClassList.prototype.makeItemList = function(){
-        var c = this._actor.multiclass();
-        for(var classId in c){
-            if(c.hasOwnProperty(classId)) continue;
-            this._data.push($dataClasses[classId].name);
-        }
-        for(var i =0; i < 5;i++){
-            this._data.push(i);
-        }
-    };
+    Window_ClassList.prototype.buildClassList = function(){
 
-    Window_Base.prototype.createContents = function() {
-        this.contents = new Bitmap(this.contentsWidth(), this.contentsHeight());
-        this.resetFontSettings();
-    };
-
-    Window_Base.prototype.resetFontSettings = function() {
-        this.contents.fontFace = this.standardFontFace();
-        this.contents.fontSize = this.standardFontSize();
-        this.resetTextColor();
-    };
-
-    Window_Base.prototype.resetTextColor = function() {
-        this.changeTextColor(this.normalColor());
-    };
-
-    Window_ClassList.prototype.drawItem = function(index) {
-        var item = $dataClasses[this._data[index]];
-        if (!item) return;
-        this.drawText(this._data[index], x, y, width, 'right');
-        this.changePaintOpacity(true);
-    };
+    }
     /**
      * Main Options Window
      */
