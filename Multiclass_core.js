@@ -1,5 +1,6 @@
 var multi = {};
 
+
 (function() {
 
     var Game_Actor_setup = Game_Actor.prototype.setup;
@@ -51,4 +52,6 @@ var multi = {};
             $gameMessage.add(msg);
         }
     }
+
+
 })();

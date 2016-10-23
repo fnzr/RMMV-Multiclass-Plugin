@@ -1,7 +1,24 @@
 //=============================================================================
-// multi.Scene_MultiClass
+// Scene_MultiClass
 //=============================================================================
 (function () {
+
+    //=============================================================================
+// Window_MenuCommand
+// This creates the menu option.
+//=============================================================================
+
+    var addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
+    Window_MenuCommand.prototype.addOriginalCommands = function() {
+        this.addMulticlassCommand();
+        addOriginalCommands.call(this);
+    };
+
+    Window_MenuCommand.prototype.addMulticlassCommand = function() {
+        var text = "Hawt";
+        var enabled = true;
+        this.addCommand(text, 'multiclass', enabled);
+    };
 
     var createCommandWindow = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function () {
@@ -12,24 +29,24 @@
     var onPersonalOk = Scene_Menu.prototype.onPersonalOk;
     Scene_Menu.prototype.onPersonalOk = function () {
         if (this._commandWindow.currentSymbol() === 'multiclass') {
-            SceneManager.push(multi.Scene_MultiClass);
+            SceneManager.push(Scene_MultiClass);
         } else {
             onPersonalOk.call(this);
         }
     };
 
-    multi.Scene_MultiClass = function () {
+    var Scene_MultiClass = function () {
         this.initialize.apply(this, arguments);
     }
 
-    multi.Scene_MultiClass.prototype = Object.create(Scene_MenuBase.prototype);
-    multi.Scene_MultiClass.prototype.constructor = multi.Scene_MultiClass;
+    Scene_MultiClass.prototype = Object.create(Scene_MenuBase.prototype);
+    Scene_MultiClass.prototype.constructor = Scene_MultiClass;
 
-    multi.Scene_MultiClass.prototype.initialize = function () {
+    Scene_MultiClass.prototype.initialize = function () {
         Scene_MenuBase.prototype.initialize.call(this);
     };
 
-    multi.Scene_MultiClass.prototype.create = function () {
+    Scene_MultiClass.prototype.create = function () {
         Scene_MenuBase.prototype.create.call(this);
         this.createHelpWindow();
         this.createCommandWindow();
@@ -40,24 +57,35 @@
         this.refreshActor();
     };
 
-    multi.Scene_MultiClass.prototype.refreshActor = function() {
+    Scene_MultiClass.prototype.refreshActor = function() {
         var actor = this.actor();
         this._statusWindow.setActor(actor);
         this._classWindow.setActor(actor);
     }
 
-    multi.Scene_MultiClass.prototype.createCommandWindow = function () {
+    Scene_MultiClass.prototype.createCommandWindow = function () {
         this._commandWindow = new Window_MultiClassCommand();
         var win = this._commandWindow;
         win.y = this._helpWindow.height;
-        //win.setHandler('class', this.commandClass.bind(this));
+        win.setHandler('classes', this.commandClass.bind(this));
         win.setHandler('cancel', this.popScene.bind(this));
         win.setHandler('pagedown', this.nextActor.bind(this));
         win.setHandler('pageup', this.previousActor.bind(this));
         this.addWindow(win);
     };
 
-    multi.Scene_MultiClass.prototype.createStatusWindow = function () {
+    Scene_MultiClass.prototype.commandClass = function() {
+        this._classWindow.activate();
+        this._classWindow.refresh();
+        this._classWindow.select(0);
+    };
+
+    Scene_MultiClass.prototype.onActorChange = function() {
+        this.refreshActor();
+        this._commandWindow.activate();
+    };
+
+    Scene_MultiClass.prototype.createStatusWindow = function () {
         var wx = this._commandWindow.width;
         var wy = this._helpWindow.height;
         var ww = Graphics.boxWidth - wx;
@@ -66,23 +94,61 @@
         this.addWindow(this._statusWindow);
     };
 
-    multi.Scene_MultiClass.prototype.createClassWindow = function () {
+    Scene_MultiClass.prototype.createClassWindow = function () {
         var wx = 0;//Graphics.boxWidth / 2;
         var wy = this._helpWindow.height + this._commandWindow.height;
         var ww = this._commandWindow.width;
         var wh = Graphics.boxHeight - (this._commandWindow.height + this._helpWindow.height);
         this._classWindow = new Window_ClassList(wx,wy,ww,wh);
+        this._classWindow.setHelpWindow(this._helpWindow);
+        this._classWindow.setHandler('cancel',this.onClassCancel.bind(this))
         this.addWindow(this._classWindow);
     };
 
-    multi.Scene_MultiClass.prototype.createSkillWindow = function () {
+    Scene_MultiClass.prototype.onClassCancel = function() {
+        this._classWindow.deselect();
+        this._classWindow.deactivate();
+        this._commandWindow.activate();
+    }
+
+    Scene_MultiClass.prototype.createSkillWindow = function () {
         var wx = this._classWindow.width;
         var wy = this._classWindow.position.y;
         var ww = Graphics.boxWidth - this._classWindow.width;
         var wh = this._classWindow.height;
 
-        this._skillWindow = new Window_Base(wx,wy,ww,wh);
+        this._skillWindow = new Window_Skill(wx,wy,ww,wh);
         this.addWindow(this._skillWindow);
+
+        this._classWindow.setSkillWindow(this._skillWindow);
+    };
+
+    function Window_Skill() {
+        this.initialize.apply(this, arguments);
+        this._lastSelected = -1;
+    }
+
+    Window_Skill.prototype = Object.create(Window_Selectable.prototype);
+    Window_Skill.prototype.constructor = Window_Skill;
+
+    Window_Skill.prototype.initialize = function(x, y, width, height) {
+        Window_Selectable.prototype.initialize.call(this, x, y, width, height);
+    };
+
+    Window_Skill.prototype.refresh = function(classId,level) {
+        this.contents.clear();
+        var idx = 0;
+        $dataClasses[classId].learnings.forEach(function(learning) {
+            if (level >= learning.level) {
+                var rect = this.itemRect(idx);
+                this.drawText($dataSkills[learning.skillId].name,rect.x,rect.y,this.width,'left');
+                idx++;
+            }
+        }, this);
+    };
+
+    Window_Skill.prototype.maxCols = function(){
+        return 2;
     };
 
     /**
@@ -98,25 +164,56 @@
     Window_ClassList.prototype.initialize = function(x, y, width, height) {
         Window_Selectable.prototype.initialize.call(this, x, y, width, height);
         this._actor = null;
+        this._skillWindow = null;
         this._data = [];
+    };
+
+    Window_ClassList.prototype.setSkillWindow = function(skillWindow){
+        this._skillWindow = skillWindow;
     };
 
     Window_ClassList.prototype.setActor = function(actor) {
         if (this._actor === actor) return;
         this._actor = actor;
+        this.contents.clear();
         this.refresh();
         this.resetScroll();
     };
 
+    Window_ClassList.prototype.item = function() {
+        return this._data && this.index() >= 0 ? this._data[this.index()] : null;
+    };
+
     Window_ClassList.prototype.refresh = function() {
-        //this.makeItemList();
-        //this.createContents();
-        //this.drawAllItems();
-        this.drawText("Why hello",0,0,this.width,'left');
+        this.buildClassList();
+    };
+
+    Window_ClassList.prototype.updateHelp = function() {
+        this.setHelpWindowItem($dataClasses[this.item()]);
+        this.updateSkill();
+    };
+
+    Window_ClassList.prototype.updateSkill = function(){
+        if(this.index() == -1) return;
+        var classId = this._data[this.index()];
+        this._skillWindow.refresh(classId,this._actor.multiclass()[classId]);
+    };
+
+    Window_ClassList.prototype.maxItems = function() {
+        return this._data ?  this._data.length  : 1;
     };
 
     Window_ClassList.prototype.buildClassList = function(){
-
+        this._data = [];
+        var idx = 0;
+        for(var classId in this._actor.multiclass()){
+            if(this._actor.multiclass.hasOwnProperty(classId)) continue;
+            var rect = this.itemRect(idx);
+            this.drawText($dataClasses[classId].name,rect.x,rect.y,this.width,'left');
+            this.drawText(this._actor.multiclass()[classId], rect.x, rect.y, rect.width,'right');
+            idx++;
+            this._data.push(classId)
+        }
     }
     /**
      * Main Options Window
