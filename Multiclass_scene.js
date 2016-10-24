@@ -9,12 +9,12 @@
 //=============================================================================
 
     var addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
-    Window_MenuCommand.prototype.addOriginalCommands = function() {
+    Window_MenuCommand.prototype.addOriginalCommands = function () {
         this.addMulticlassCommand();
         addOriginalCommands.call(this);
     };
 
-    Window_MenuCommand.prototype.addMulticlassCommand = function() {
+    Window_MenuCommand.prototype.addMulticlassCommand = function () {
         var text = "Hawt";
         var enabled = true;
         this.addCommand(text, 'multiclass', enabled);
@@ -57,7 +57,7 @@
         this.refreshActor();
     };
 
-    Scene_MultiClass.prototype.refreshActor = function() {
+    Scene_MultiClass.prototype.refreshActor = function () {
         this._statusWindow.setActor(this.actor());
         this._classWindow.setActor(this.actor());
     }
@@ -73,13 +73,13 @@
         this.addWindow(win);
     };
 
-    Scene_MultiClass.prototype.commandClass = function() {
+    Scene_MultiClass.prototype.commandClass = function () {
         this._classWindow.activate();
         this._classWindow.refresh();
         this._classWindow.select(0);
     };
 
-    Scene_MultiClass.prototype.onActorChange = function() {
+    Scene_MultiClass.prototype.onActorChange = function () {
         this.refreshActor();
         this._commandWindow.activate();
     };
@@ -98,13 +98,13 @@
         var wy = this._helpWindow.height + this._commandWindow.height;
         var ww = this._commandWindow.width;
         var wh = Graphics.boxHeight - (this._commandWindow.height + this._helpWindow.height);
-        this._classWindow = new Window_ClassList(wx,wy,ww,wh);
+        this._classWindow = new Window_ClassList(wx, wy, ww, wh);
         this._classWindow.setHelpWindow(this._helpWindow);
-        this._classWindow.setHandler('cancel',this.onClassCancel.bind(this))
+        this._classWindow.setHandler('cancel', this.onClassCancel.bind(this))
         this.addWindow(this._classWindow);
     };
 
-    Scene_MultiClass.prototype.onClassCancel = function() {
+    Scene_MultiClass.prototype.onClassCancel = function () {
         this._classWindow.deselect();
         this._classWindow.deactivate();
         this._commandWindow.activate();
@@ -116,7 +116,7 @@
         var ww = Graphics.boxWidth - this._classWindow.width;
         var wh = this._classWindow.height;
 
-        this._skillWindow = new Window_Skill(wx,wy,ww,wh);
+        this._skillWindow = new Window_Skill(wx, wy, ww, wh);
         this.addWindow(this._skillWindow);
 
         this._classWindow.setSkillWindow(this._skillWindow);
@@ -130,23 +130,23 @@
     Window_Skill.prototype = Object.create(Window_Selectable.prototype);
     Window_Skill.prototype.constructor = Window_Skill;
 
-    Window_Skill.prototype.initialize = function(x, y, width, height) {
+    Window_Skill.prototype.initialize = function (x, y, width, height) {
         Window_Selectable.prototype.initialize.call(this, x, y, width, height);
     };
 
-    Window_Skill.prototype.refresh = function(classId,level) {
+    Window_Skill.prototype.refresh = function (classId, level) {
         this.contents.clear();
         var idx = 0;
-        $dataClasses[classId].learnings.forEach(function(learning) {
+        $dataClasses[classId].learnings.forEach(function (learning) {
             if (level >= learning.level) {
                 var rect = this.itemRect(idx);
-                this.drawText($dataSkills[learning.skillId].name,rect.x,rect.y,this.width,'left');
+                this.drawText($dataSkills[learning.skillId].name, rect.x, rect.y, this.width, 'left');
                 idx++;
             }
         }, this);
     };
 
-    Window_Skill.prototype.maxCols = function(){
+    Window_Skill.prototype.maxCols = function () {
         return 2;
     };
 
@@ -160,18 +160,18 @@
     Window_ClassList.prototype = Object.create(Window_Selectable.prototype);
     Window_ClassList.prototype.constructor = Window_ClassList;
 
-    Window_ClassList.prototype.initialize = function(x, y, width, height) {
+    Window_ClassList.prototype.initialize = function (x, y, width, height) {
         Window_Selectable.prototype.initialize.call(this, x, y, width, height);
         this._actor = null;
         this._skillWindow = null;
         this._data = [];
     };
 
-    Window_ClassList.prototype.setSkillWindow = function(skillWindow){
+    Window_ClassList.prototype.setSkillWindow = function (skillWindow) {
         this._skillWindow = skillWindow;
     };
 
-    Window_ClassList.prototype.setActor = function(actor) {
+    Window_ClassList.prototype.setActor = function (actor) {
         if (this._actor === actor) return;
         this._actor = actor;
         this.contents.clear();
@@ -179,37 +179,38 @@
         this.resetScroll();
     };
 
-    Window_ClassList.prototype.item = function() {
+    Window_ClassList.prototype.item = function () {
         return this._data && this.index() >= 0 ? this._data[this.index()] : null;
     };
 
-    Window_ClassList.prototype.refresh = function() {
+    Window_ClassList.prototype.refresh = function () {
+        this.contents.clear();
         this.buildClassList();
     };
 
-    Window_ClassList.prototype.updateHelp = function() {
+    Window_ClassList.prototype.updateHelp = function () {
         this.setHelpWindowItem($dataClasses[this.item()]);
         this.updateSkill();
     };
 
-    Window_ClassList.prototype.updateSkill = function(){
-        if(this.index() == -1) return;
+    Window_ClassList.prototype.updateSkill = function () {
+        if (this.index() == -1) return;
         var classId = this._data[this.index()];
-        this._skillWindow.refresh(classId,this._actor.getClassLevel(classId));
+        this._skillWindow.refresh(classId, this._actor.getClassLevel(classId));
     };
 
-    Window_ClassList.prototype.maxItems = function() {
-        return this._data ?  this._data.length  : 1;
+    Window_ClassList.prototype.maxItems = function () {
+        return this._data ? this._data.length : 1;
     };
 
-    Window_ClassList.prototype.buildClassList = function(){
+    Window_ClassList.prototype.buildClassList = function () {
         this._data = [];
         var idx = 0;
         var classes = this._actor.multiclass();
-        for(var classId in classes){
+        for (var classId in classes) {
             var rect = this.itemRect(idx);
-            this.drawText($dataClasses[classId].name,rect.x,rect.y,this.width,'left');
-            this.drawText(classes[classId], rect.x, rect.y, rect.width,'right');
+            this.drawText($dataClasses[classId].name, rect.x, rect.y, this.width, 'left');
+            this.drawText(classes[classId], rect.x, rect.y, rect.width, 'right');
             idx++;
             this._data.push(classId)
         }
@@ -243,6 +244,36 @@
 
     Window_MultiClassCommand.prototype.makeCommandList = function () {
         this.addCommand('Classes', 'classes', true);
+        //this.addCommand('Level Up', 'levelup', this._actor.cp() > 0);
     };
+
+    Window_Base.prototype.drawActorCP = function (actor, x, y) {
+        this.changeTextColor(this.systemColor());
+        var dw1 = this.textWidth("CP");
+        this.drawText("CP", x, y, dw1);
+        this.resetTextColor();
+        var cp = Yanfly.Util.toGroup(actor.cp());
+        var dw2 = this.textWidth(Yanfly.Util.toGroup(actor.maxLevel()));
+        this.drawText(cp, x + dw1, y, dw2, 'right');
+    };
+
+    /* This is pretty much copy+paste from YEP_CoreEngine. */
+    Window_Base.prototype.drawActorSimpleStatus = function (actor, x, y, width) {
+        var lineHeight = this.lineHeight();
+        var xpad = Window_Base._faceWidth + (2 * Yanfly.Param.TextPadding);
+        var x2 = x + xpad;
+        var width2 = Math.max(180, width - xpad - this.textPadding());
+        this.drawActorName(actor, x, y);
+        this.drawActorLevel(actor, x, y + lineHeight * 1);
+        this.drawActorCP(actor, x, y + lineHeight * 2);
+        this.drawActorIcons(actor, x, y + lineHeight * 3);
+        this.drawActorClass(actor, x2, y, width2);
+        this.drawActorHp(actor, x2, y + lineHeight * 1, width2);
+        this.drawActorMp(actor, x2, y + lineHeight * 2, width2);
+        if (eval(Yanfly.Param.MenuTpGauge)) {
+            this.drawActorTp(actor, x2, y + lineHeight * 3, width2);
+        }
+    };
+
 
 })();

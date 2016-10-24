@@ -17,7 +17,9 @@ var multi = {};
     var _Game_Actor_setup = Game_Actor.prototype.setup;
     Game_Actor.prototype.setup = function (actorId) {
         _Game_Actor_setup.call(this, actorId);
+        var classId = this._classId;
         this._multiclass  = {};
+        this._multiclass[this._classId] = this._level;
         this._cp = 0;
         //this.increaseLevel(1,3);
         //this.increaseLevel(3,2);
@@ -67,10 +69,19 @@ var multi = {};
 
     Game_Actor.prototype.upgradeParams = function(classId){
         $dataClasses[classId].params.forEach(function(value, index,paramTable){
-            //TODO: Deal with level 1 parameters. Also level 0 MaxHP.
             var currentLevel = this._multiclass[classId];
-            var previous = paramTable[index][currentLevel-1];
-            var current = paramTable[index][currentLevel];
+            var previous, current;
+            if ($dataClasses[classId].baseParamFormula[index] !== '') {
+                var formula = $dataClasses[classId].baseParamFormula[index];
+                //Yanfly's function tests level = level || this.level
+                //String(level) is a hack because Javascript evaluates 0 == false, so the minimum level we can obtain
+                //normally is 1 (this.level)
+                previous = this.classBaseParamFormula(formula, index,String(currentLevel-1));
+                current = this.classBaseParamFormula(formula, index,currentLevel);
+            }else{
+                previous = currentLevel == 1 ? 0 : paramTable[index][currentLevel-1];
+                current = paramTable[index][currentLevel];
+            }
             var increase = current - previous;
             this.setParam(index,this.param(index) + increase);
         },this);
