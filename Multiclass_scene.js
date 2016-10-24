@@ -58,9 +58,8 @@
     };
 
     Scene_MultiClass.prototype.refreshActor = function() {
-        var actor = this.actor();
-        this._statusWindow.setActor(actor);
-        this._classWindow.setActor(actor);
+        this._statusWindow.setActor(this.actor());
+        this._classWindow.setActor(this.actor());
     }
 
     Scene_MultiClass.prototype.createCommandWindow = function () {
@@ -196,7 +195,7 @@
     Window_ClassList.prototype.updateSkill = function(){
         if(this.index() == -1) return;
         var classId = this._data[this.index()];
-        this._skillWindow.refresh(classId,this._actor.multiclass()[classId]);
+        this._skillWindow.refresh(classId,this._actor.getClassLevel(classId));
     };
 
     Window_ClassList.prototype.maxItems = function() {
@@ -206,11 +205,11 @@
     Window_ClassList.prototype.buildClassList = function(){
         this._data = [];
         var idx = 0;
-        for(var classId in this._actor.multiclass()){
-            if(this._actor.multiclass.hasOwnProperty(classId)) continue;
+        var classes = this._actor.multiclass();
+        for(var classId in classes){
             var rect = this.itemRect(idx);
             this.drawText($dataClasses[classId].name,rect.x,rect.y,this.width,'left');
-            this.drawText(this._actor.multiclass()[classId], rect.x, rect.y, rect.width,'right');
+            this.drawText(classes[classId], rect.x, rect.y, rect.width,'right');
             idx++;
             this._data.push(classId)
         }
