@@ -71,7 +71,8 @@ var multi = {};
         $dataClasses[classId].params.forEach(function(value, index,paramTable){
             var currentLevel = this._multiclass[classId];
             var previous, current;
-            if ($dataClasses[classId].baseParamFormula[index] !== '') {
+            if ($dataClasses[classId].baseParamFormula &&
+                $dataClasses[classId].baseParamFormula[index] !== '') {
                 var formula = $dataClasses[classId].baseParamFormula[index];
                 //Yanfly's function tests level = level || this.level
                 //String(level) is a hack because Javascript evaluates 0 == false, so the minimum level we can obtain
@@ -96,9 +97,19 @@ var multi = {};
         },this);
     };
 
+    Game_Actor.prototype.gainTraits = function(classId){
+        var traits = this.allTraits();
+        console.log(traits.length);
+        $dataClasses[classId].traits.forEach(function(trait){
+            traits.push(trait);
+        });
+        console.log(this.allTraits().length);
+    };
+
     Game_Actor.prototype.levelUpClass = function(classId){
         if(this._cp > 0) this._cp--;
         this.increaseLevel(classId,1);
+        this.gainTraits(classId);
         this.upgradeParams(classId);
         this.learnSkills(classId);
     };
